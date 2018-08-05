@@ -1,0 +1,105 @@
+# -*- coding:UTF-8 -*-
+
+import requests
+import cv2
+from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.wait import WebDriverWait
+import re
+from urllib.parse import urlencode
+
+
+sessiona=requests.Session()
+url="http://www.mili18.com:9000/login.aspx"
+ulr_captcha="http://www.mili18.com:9000/yzm.aspx"
+
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36',
+
+}
+
+search= sessiona.get('http://www.mili18.com:9000/frmXmcx.aspx', headers=headers)# 获取项目查询参数调用
+
+#登陆函数，session已经维持代码
+def signin():
+    response = sessiona.get(ulr_captcha)
+    captcha_aspx=response.content
+    with open("captcha.png", 'wb')as fb:
+        fb.write(captcha_aspx)
+    tupian = cv2.imread("captcha.png")
+    cv2.imshow("tupian", tupian)  # 在指定的窗口中显示一幅图像
+    cv2.waitKey(0)  # 参数=0: （也可以是小于0的数值）一直显示，不会有返回值，若在键盘上按下一个键即会消失 ，则会返回一个按键对应的ascii码值
+    cv2.destroyAllWindows()  # 删除建立的全部窗口，释放资源
+    yzm = input("yzm: ")
+    data = {
+        "lx": "2",
+        "yhmc": "caotianzzz",
+        "psw": "qazwsx",
+        "yzm": yzm
+    }
+
+    # r = sessiona.post(url, data=data, headers=headers)
+    # print(r)
+    # r = r.content
+    # print(r)
+
+#获取____VIEWSTATE参数
+# def get__VIEW():
+#     search_parm= sessiona.get('http://www.mili18.com:9000/frmXmcx.aspx', headers=headers)  # 获取项目查询参数调用
+#     soup = BeautifulSoup(search.content, 'lxml')  # r无法解析，只能解析文档
+#     __VIEWSTATE= soup.find(id="__VIEWSTATE")["value"]
+#     __VIEWSTATEGENERATOR=soup.find(id="__VIEWSTATEGENERATOR")["value"]
+#     __EVENTVALIDATION=soup.find(id="_EVENTVALIDATION")["value"]
+
+def search(number):
+    search_parm= sessiona.get('http://www.mili18.com:9000/frmXmcx.aspx')  # 获取项目查询参数调用
+    soup = BeautifulSoup(search_parm.text, 'lxml')  # r无法解析，只能解析文档
+    __VIEWSTATE= soup.find(id="__VIEWSTATE")["value"]
+    __EVENTVALIDATION=soup.find(id="__EVENTVALIDATION")["value"]
+    data1 = {
+        "ScriptManager1": "UpdatePanel2|imIf",
+        "__EVENTTARGET": "",
+        "__EVENTARGUMENT": "",
+        "__LASTFOCUS": "",
+        "__VIEWSTATE": __VIEWSTATE,
+        "__VIEWSTATEENCRYPTED": "",
+        "__VIEWSTATEGENERATOR": "9F90A68B",
+        "__EVENTVALIDATION": __EVENTVALIDATION,
+        "ddlIf": "项目编号",
+        "txtIf": number,
+        "ddlSize": "12",
+        "imIf.x": "12",
+        "imIf.y": "13",
+
+    }
+    headers1 = {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36',
+        'Accept': '*/*',
+        'Accept-Encoding': 'gzip, deflate',
+        'Accept-Language': 'zh-CN,zh;q=0.9',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Content-Length': '2561',
+        'Host': 'www.mili18.com:9000',
+        'Origin': 'http://www.mili18.com:9000',
+        'Referer': 'http://www.mili18.com:9000/frmXmcx.aspx',
+        'X-MicrosoftAjax': 'Delta=true'
+        }
+    data1=urlencode(data1)  #urlencode很重要！！！！！
+    result1=sessiona.post('http://www.mili18.com:9000/frmXmcx.aspx',data=data1,headers=headers1)
+    print(result1.text)
+    print(result1)
+    print(type(result1))
+    soup_result1=BeautifulSoup(result1.content,'lxml')
+    # print(soup_result1)
+    # print(soup_result1.find_all('tbody'))
+
+
+
+
+signin()
+search(25000)
+
